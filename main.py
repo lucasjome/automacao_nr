@@ -4,7 +4,6 @@ from pdf2image import convert_from_path
 from pathlib import Path
 import ntpath
 import argparse as ap
-import json
 
 
 def extract_pdf_as_image(pdf_file):
@@ -55,7 +54,6 @@ def main():
     # Converte pdf -> png
     temp_file = extract_pdf_as_image(pdf_file)
     aws_textract_response = get_ocr_response(temp_file)
-    
 
 
 if __name__ == "__main__":
