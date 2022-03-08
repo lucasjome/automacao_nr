@@ -5,6 +5,23 @@ from pathlib import Path
 import ntpath
 import argparse as ap
 
+from classes import Course, Employee, CompletedCourse
+from db_base import session_factory
+from datetime import datetime
+
+
+def populate_db(session):
+    nr10 = Course(
+        name='NR 10', hours=40, description='Segurança em Instalações e Serviços em Eletricidade')
+    nr35 = Course(name='NR 35', hours=8, description='Trabalho em Altura')
+
+    f1 = Employee(name="Fernando Souza")
+    f2 = Employee(name="Fernando dos Santos Oliveira")
+    f3 = Employee(name='Fábio Aurélio de Alencar')
+
+    session.add_all([nr10, nr35, f1, f2, f3])
+    session.commit()
+
 
 def extract_pdf_as_image(pdf_file):
     print("Convertendo o PDF para PNG")
@@ -41,6 +58,10 @@ def get_ocr_response(documentName):
 
 
 def main():
+    # Criar e adicionar informações ao banco de dados
+    session = session_factory()
+    populate_db()
+
     # Parse Argument (--help para mais detalhes)
     parser = ap.ArgumentParser(
         description='Extração automática de certificados tipo NR')
