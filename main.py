@@ -1,9 +1,29 @@
-from tempfile import tempdir
 import boto3
 from pdf2image import convert_from_path
 from pathlib import Path
 import ntpath
 import argparse as ap
+import trp
+
+from classes import Course, Employee, CompletedCourse
+from db_base import session_factory
+from datetime import datetime
+from ocr_extraction_helper import OcrParser
+import json
+
+
+def populate_db(session):
+    nr10 = Course(
+        name='NR 10 Básico', hours=40, description='Segurança em Instalações e Serviços em Eletricidade')
+    nr35 = Course(name='NR 35 Básico', hours=8,
+                  description='Trabalho em Altura')
+
+    f1 = Employee(name="Fernando Souza")
+    f2 = Employee(name="Fernando dos Santos Oliveira")
+    f3 = Employee(name='Fábio Aurélio de Alencar')
+
+    session.add_all([nr10, nr35, f1, f2, f3])
+    session.commit()
 
 
 def extract_pdf_as_image(pdf_file):
@@ -40,7 +60,103 @@ def get_ocr_response(documentName):
     return response_png
 
 
+def parse_document(document):
+    print("Analisando certificado NR")
+    ocr_parser = OcrParser(page=document.pages[0])
+
+    # Criando o Funcionário
+    person_name = ocr_parser.get_person_name()
+
+    # Valida existência de nome no certificado
+    if person_name == None or person_name['person_name'] == '':
+        raise ValueError("Nome não encontrado")
+
+    doc_employee = Employee(name=person_name['person_name'])
+
+    # Criando o Curso
+    course_info = ocr_parser.get_course_info()
+    if course_info == None:
+        raise ValueError("Dados sobre o curso não encontrados")
+
+    course_date_info = ocr_parser.get_course_date()
+
+    doc_course = Course(name=course_info['course_name'],
+                        description=course_info['course_description'],
+                        company=course_info['course_company'],
+                        hours=course_date_info['course_hours'])
+
+    # Dados do assinante responsável
+    signer_info = ocr_parser.get_signer_info()
+    if signer_info == None:
+        raise ValueError("Erro ao buscar dados do Assinante")
+
+    return doc_employee, doc_course, signer_info, course_date_info
+
+
+def validate_certificate(session, doc_employee, doc_course, signer_info, course_date_info):
+    print("Validando o certificado\n")
+    v_name, v_course, v_sign = False, False, False  # Variáveis de validação
+
+    # Verifica se o funcionario existe no banco de dados
+    employee_query = session.query(Employee).filter(
+        Employee.name.ilike(doc_employee.name))
+
+    if employee_query.count() == 1:
+        v_name = True
+        doc_employee = employee_query.first()
+        print(f"Nome do funcionário: {doc_employee.name}")
+    else:
+        print("Funcionário não encontrado no sistema.")
+
+    # Verifica e valida o curso no banco de dados
+    course_query = session.query(Course).filter(
+        Course.name.ilike(doc_course.name))
+    if course_query.count() == 1:
+        course = course_query.first()
+        print(f"Curso: {doc_course.name} - {doc_course.description}")
+        print(
+            f" - Curso realizado em: {course_date_info['course_date'].strftime('%m/%Y')}")
+
+        if doc_course.hours >= course.hours:
+            v_course = True
+            print(
+                f" - Carga horária: Aprovada ({doc_course.hours}h de {course.hours}h)")
+        else:
+            print(
+                f" - Carga horária: Mínimo não obtido ({doc_course.hours}h de {course.hours}h)")
+
+    # Verifica a existência de assinatura
+    signer_name = signer_info['signer_name']
+    signer_signature = signer_info['signer_signature']
+
+    print(f"Responsável pelo curso: {signer_name}")
+    if signer_signature != None:
+        v_sign = True
+        print(" - Documento assinado.")
+    else:
+        print(" - Documento não assinado!")
+
+    print()
+
+    # Se tudo está correto, salvar no banco
+    if not (v_name and v_course and v_sign):
+        print("Documento incompleto, não será salvo no banco de dados.")
+        return False
+
+    print("Salvando curso completado no banco de dados")
+    doc_completedcourse = CompletedCourse(employee_id=doc_employee.employee_id,
+                                          course_id=doc_course.course_id,
+                                          donein=course_date_info['course_date'])
+    session.add(doc_completedcourse)
+    session.commit()
+    return True
+
+
 def main():
+    # Criar e adicionar informações ao banco de dados
+    session = session_factory()
+    populate_db(session)
+
     # Parse Argument (--help para mais detalhes)
     parser = ap.ArgumentParser(
         description='Extração automática de certificados tipo NR')
@@ -51,9 +167,25 @@ def main():
     args = parser.parse_args()
     pdf_file = args.input_pdf
 
-    # Converte pdf -> png
-    temp_file = extract_pdf_as_image(pdf_file)
-    aws_textract_response = get_ocr_response(temp_file)
+    # Converter pdf -> png
+    # temp_file = extract_pdf_as_image(pdf_file)
+    # aws_textract_response = get_ocr_response(temp_file)
+
+    with open('./temp/teste10.json', 'r') as f:
+        teste10_json = json.load(f)
+
+    with open('./temp/teste35.json', 'r') as f:
+        teste35_json = json.load(f)
+    document = trp.Document(teste35_json)
+
+    # Extrai as informações e cria os objetos
+    doc_employee, doc_course, signer_info, course_date_info = parse_document(
+        document)
+
+    # Validação com o banco
+    validate_certificate(session, doc_employee, doc_course,
+                         signer_info, course_date_info)
+    session.close()
 
 
 if __name__ == "__main__":
