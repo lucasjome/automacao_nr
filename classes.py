@@ -9,11 +9,13 @@ class Course(Base):
     course_id = Column(Integer, primary_key=True)
     name = Column(Unicode(50),)
     description = Column(UnicodeText, nullable=True)
+    company = Column(UnicodeText, nullable=True)
     hours = Column(Float)
 
-    def __init__(self, name=None, description=None, hours=None):
+    def __init__(self, name=None, description=None, company=None, hours=None):
         self.name = name
         self.description = description
+        self.company = company
         self.hours = hours
 
 
