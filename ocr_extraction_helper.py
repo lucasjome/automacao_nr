@@ -2,7 +2,7 @@ from datetime import datetime
 import trp
 
 
-class OcrExtraction:
+class OcrParser:
     page = None
 
     def __init__(self, page):

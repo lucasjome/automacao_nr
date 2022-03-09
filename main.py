@@ -9,7 +9,7 @@ import trp
 from classes import Course, Employee, CompletedCourse
 from db_base import session_factory
 from datetime import datetime
-from ocr_extraction_helper import OcrExtraction
+from ocr_extraction_helper import OcrParser
 import json
 
 
@@ -63,23 +63,21 @@ def get_ocr_response(documentName):
 
 def parse_document(document):
     print("Analisando certificado NR")
-    ocr_parser = OcrExtraction(page=document.pages[0])
+    ocr_parser = OcrParser(page=document.pages[0])
 
     # Criando o Funcionário
     person_name = ocr_parser.get_person_name()
 
     # Valida existência de nome no certificado
     if person_name == None or person_name['person_name'] == '':
-        print("Certificado sem nome")
-        return None
+        raise ValueError("Nome não encontrado")
 
     doc_employee = Employee(name=person_name['person_name'])
 
     # Criando o Curso
     course_info = ocr_parser.get_course_info()
     if course_info == None:
-        print("Dados sobre o curso não encontrados")
-        return None
+        raise ValueError("Dados sobre o curso não encontrados")
 
     course_date_info = ocr_parser.get_course_date()
 
@@ -91,16 +89,16 @@ def parse_document(document):
     # Dados do assinante responsável
     signer_info = ocr_parser.get_signer_info()
     if signer_info == None:
-        print("Erro ao buscar dados do Assinante")
-        return None
+        raise ValueError("Erro ao buscar dados do Assinante")
     # signer_name = signer_info['signer_name']
     # signer_signature = signer_info['signer_signature']
 
     return doc_employee, doc_course, signer_info
 
-def validate_certificate(doc_employee, doc_course, signer_info):
+
+def validate_certificate(session, doc_employee, doc_course, signer_info):
     print("Validando certificado")
-    
+
 
 def main():
     # Criar e adicionar informações ao banco de dados
@@ -131,6 +129,8 @@ def main():
     # Extrai as informações e cria os objetos
     doc_employee, doc_course, signer_info = parse_document(document)
 
+    # Validação com o banco
+    validate_certificate(session, doc_employee, doc_course, signer_info)
     session.close()
 
 
