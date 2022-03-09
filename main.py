@@ -25,6 +25,8 @@ def populate_db(session):
     session.add_all([nr10, nr35, f1, f2, f3])
     session.commit()
 
+# Parse Document and OCR
+
 
 def extract_pdf_as_image(pdf_file):
     print("Convertendo o PDF para PNG")
@@ -91,6 +93,8 @@ def parse_document(document):
         raise ValueError("Erro ao buscar dados do Assinante")
 
     return doc_employee, doc_course, signer_info, course_date_info
+
+# Validation methods
 
 
 def validate_employee(session, doc_employee):
