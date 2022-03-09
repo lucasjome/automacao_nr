@@ -34,6 +34,7 @@ class CompletedCourse(Base):
 
     employee_id = Column(Integer, ForeignKey('employees.employee_id'))
     employee = relationship("Employee", foreign_keys=[employee_id])
+
     course_id = Column(Integer, ForeignKey('courses.course_id'))
     course = relationship("Course", foreign_keys=[course_id])
 

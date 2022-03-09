@@ -60,7 +60,7 @@ def get_ocr_response(documentName):
 def main():
     # Criar e adicionar informações ao banco de dados
     session = session_factory()
-    populate_db()
+    populate_db(session)
 
     # Parse Argument (--help para mais detalhes)
     parser = ap.ArgumentParser(
@@ -75,6 +75,8 @@ def main():
     # Converte pdf -> png
     temp_file = extract_pdf_as_image(pdf_file)
     aws_textract_response = get_ocr_response(temp_file)
+
+    session.close()
 
 
 if __name__ == "__main__":
