@@ -93,21 +93,21 @@ def parse_document(document):
     return doc_employee, doc_course, signer_info, course_date_info
 
 
-def validate_certificate(session, doc_employee, doc_course, signer_info, course_date_info):
-    print("Validando o certificado\n")
-    v_name, v_course, v_sign = False, False, False  # Variáveis de validação
-
+def validate_employee(session, doc_employee):
     # Verifica se o funcionario existe no banco de dados
     employee_query = session.query(Employee).filter(
         Employee.name.ilike(doc_employee.name))
 
-    if employee_query.count() == 1:
-        v_name = True
-        doc_employee = employee_query.first()
-        print(f"Nome do funcionário: {doc_employee.name}")
-    else:
+    if employee_query.count() != 1:
         print("Funcionário não encontrado no sistema.")
+        return False
 
+    doc_employee = employee_query.first()
+    print(f"Nome do funcionário: {doc_employee.name}")
+    return True
+
+
+def validate_course(session, doc_course, course_date_info):
     # Verifica e valida o curso no banco de dados
     course_query = session.query(Course).filter(
         Course.name.ilike(doc_course.name))
@@ -118,23 +118,36 @@ def validate_certificate(session, doc_employee, doc_course, signer_info, course_
             f" - Curso realizado em: {course_date_info['course_date'].strftime('%m/%Y')}")
 
         if doc_course.hours >= course.hours:
-            v_course = True
             print(
                 f" - Carga horária: Aprovada ({doc_course.hours}h de {course.hours}h)")
+            return True
         else:
             print(
                 f" - Carga horária: Mínimo não obtido ({doc_course.hours}h de {course.hours}h)")
+            return False
 
+
+def validate_signer(signer_info):
     # Verifica a existência de assinatura
     signer_name = signer_info['signer_name']
     signer_signature = signer_info['signer_signature']
 
     print(f"Responsável pelo curso: {signer_name}")
-    if signer_signature != None:
-        v_sign = True
-        print(" - Documento assinado.")
-    else:
+    if signer_signature == None:
         print(" - Documento não assinado!")
+        return False
+
+    print(" - Documento assinado.")
+    return True
+
+
+def validate_certificate(session, doc_employee, doc_course, signer_info, course_date_info):
+    print("Validando o certificado\n")
+
+    # Validação modular dos dados
+    v_name = validate_employee(session, doc_employee)
+    v_course = validate_course(session, doc_course, course_date_info)
+    v_sign = validate_signer(signer_info)
 
     print()
 
@@ -176,7 +189,7 @@ def main():
 
     with open('./temp/teste35.json', 'r') as f:
         teste35_json = json.load(f)
-    document = trp.Document(teste35_json)
+    document = trp.Document(teste10_json)
 
     # Extrai as informações e cria os objetos
     doc_employee, doc_course, signer_info, course_date_info = parse_document(
