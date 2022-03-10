@@ -7,7 +7,7 @@ from db_base import Base
 class Course(Base):
     __tablename__ = 'courses'
     course_id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50),)
+    name = Column(Unicode(50))
     description = Column(UnicodeText, nullable=True)
     company = Column(UnicodeText, nullable=True)
     hours = Column(Float)

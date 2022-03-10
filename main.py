@@ -117,9 +117,11 @@ def validate_course(session, doc_course, course_date_info):
         Course.name.ilike(doc_course.name))
     if course_query.count() == 1:
         course = course_query.first()
+        donein = course_date_info['course_date'].strftime('%m/%Y')
+
         print(f"Curso: {doc_course.name} - {doc_course.description}")
         print(
-            f" - Curso realizado em: {course_date_info['course_date'].strftime('%m/%Y')}")
+            f" - Data de término: {donein}")
 
         if doc_course.hours >= course.hours:
             print(
@@ -147,6 +149,7 @@ def validate_signer(signer_info):
 
 def validate_certificate(session, doc_employee, doc_course, signer_info, course_date_info):
     print("Validando o certificado\n")
+    print("# Dados obtidos:\n")
 
     # Validação modular dos dados
     v_name = validate_employee(session, doc_employee)
