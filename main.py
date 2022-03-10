@@ -47,7 +47,7 @@ def extract_pdf_as_image(pdf_file):
 
 
 def get_ocr_response(documentName):
-    print("Processando o arquivom com o AWS Textract")
+    print("Processando o arquivo com o AWS Textract")
 
     # Abre a imagem do certificado
     with open(documentName, 'rb') as document:
