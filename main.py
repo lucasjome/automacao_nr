@@ -7,9 +7,7 @@ import trp
 
 from classes import Course, Employee, CompletedCourse
 from db_base import session_factory
-from datetime import datetime
 from ocr_extraction_helper import OcrParser
-import json
 
 
 def populate_db(session):
@@ -193,15 +191,10 @@ def main():
         return False
 
     # Converter pdf -> png
-    # temp_file = extract_pdf_as_image(pdf_file)
-    # aws_textract_response = get_ocr_response(temp_file)
+    temp_file = extract_pdf_as_image(pdf_file)
+    aws_textract_response = get_ocr_response(temp_file)
 
-    with open('./temp/teste10.json', 'r') as f:
-        teste10_json = json.load(f)
-
-    with open('./temp/teste35.json', 'r') as f:
-        teste35_json = json.load(f)
-    document = trp.Document(teste10_json)
+    document = trp.Document(aws_textract_response)
 
     # Extrai as informações e cria os objetos
     doc_employee, doc_course, signer_info, course_date_info = parse_document(
