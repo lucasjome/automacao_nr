@@ -187,6 +187,11 @@ def main():
     args = parser.parse_args()
     pdf_file = args.input_pdf
 
+    # Checa se o arquivo em PDF existe
+    if not Path(pdf_file).exists():
+        print("Arquivo não encontrado.")
+        return False
+
     # Converter pdf -> png
     # temp_file = extract_pdf_as_image(pdf_file)
     # aws_textract_response = get_ocr_response(temp_file)
