@@ -10,6 +10,8 @@ class OcrParser:
         pass
 
     def __adjust_boudingbox(self, boundingBox):
+        """ Adaptação da implementação existente do BoudingBox do trp 
+         para conter bottom e right"""
         return {'top': boundingBox.top,
                 'bottom': boundingBox.top + boundingBox.height,
                 'left': boundingBox.left,
@@ -69,6 +71,7 @@ class OcrParser:
         if not name_lines:
             return None
 
+        # Busca por várias linhas para o caso de um nome apresentado em duas ou mais linhas
         for line in name_lines:
             person_name += line.text
 

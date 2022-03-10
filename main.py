@@ -47,7 +47,7 @@ def extract_pdf_as_image(pdf_file):
 
 
 def get_ocr_response(documentName):
-    print("Processando OCR com AWS Textract")
+    print("Processando o arquivom com o AWS Textract")
 
     # Abre a imagem do certificado
     with open(documentName, 'rb') as document:
@@ -110,6 +110,7 @@ def validate_employee(session, doc_employee):
 
     doc_employee = employee_query.first()
     print(f"Nome do funcionário: {doc_employee.name}")
+
     return True
 
 
