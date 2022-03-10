@@ -114,7 +114,7 @@ class OcrParser:
                'maio': 5,     'junho': 6,     'julho': 7,     'agosto': 8,
                'setembro': 9, 'outubro': 10,  'novembro': 11, 'dezembro': 12}
 
-    def _format_course_date(self, course_date):
+    def __format_course_date(self, course_date):
         course_month, course_year = course_date.split(' de ')
         month_number = self._MONTHS[course_month.lower()]
 
@@ -132,7 +132,7 @@ class OcrParser:
             if line.text.startswith('Mês e ano da conclusão'):
                 course_date = line.text.split(':')[-1].strip()
 
-        course_date = self._format_course_date(course_date)
+        course_date = self.__format_course_date(course_date)
         course_hours = float(course_total_hours.split(' ')[0])
 
         return {'course_hours': course_hours, 'course_date': course_date}

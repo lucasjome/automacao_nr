@@ -28,6 +28,7 @@ def populate_db(session):
 
 def extract_pdf_as_image(pdf_file):
     print("Convertendo o PDF para PNG")
+
     # Extrai o nome do arquivo de pdf
     pdf_filename = ntpath.basename(pdf_file)
 
@@ -41,11 +42,13 @@ def extract_pdf_as_image(pdf_file):
     # Pela simplicidade, eu assumo que a primeira página sempre é a Frente do certificado.
     temp_output = f"{temp_dir}/{pdf_filename.split('.')[0]}.png"
     converted_pdf[0].save(temp_output, 'PNG')
+
     return temp_output
 
 
 def get_ocr_response(documentName):
     print("Processando OCR com AWS Textract")
+
     # Abre a imagem do certificado
     with open(documentName, 'rb') as document:
         imageBytes = bytearray(document.read())
@@ -62,6 +65,7 @@ def get_ocr_response(documentName):
 
 def parse_document(document):
     print("Analisando certificado NR")
+
     ocr_parser = OcrParser(page=document.pages[0])
 
     # Criando o Funcionário
@@ -92,7 +96,7 @@ def parse_document(document):
 
     return doc_employee, doc_course, signer_info, course_date_info
 
-# Validation methods
+# Métodos para validação
 
 
 def validate_employee(session, doc_employee):
@@ -113,6 +117,7 @@ def validate_course(session, doc_course, course_date_info):
     # Verifica e valida o curso no banco de dados
     course_query = session.query(Course).filter(
         Course.name.ilike(doc_course.name))
+
     if course_query.count() == 1:
         course = course_query.first()
         donein = course_date_info['course_date'].strftime('%m/%Y')
@@ -121,6 +126,7 @@ def validate_course(session, doc_course, course_date_info):
         print(
             f" - Data de término: {donein}")
 
+        # Verifica se obteve a carga horária mínima
         if doc_course.hours >= course.hours:
             print(
                 f" - Carga horária: Aprovada ({doc_course.hours}h de {course.hours}h)")
@@ -137,6 +143,7 @@ def validate_signer(signer_info):
     signer_signature = signer_info['signer_signature']
 
     print(f"Responsável pelo curso: {signer_name}")
+
     if signer_signature == None:
         print(" - Documento não assinado!")
         return False
@@ -167,11 +174,12 @@ def validate_certificate(session, doc_employee, doc_course, signer_info, course_
                                           donein=course_date_info['course_date'])
     session.add(doc_completedcourse)
     session.commit()
+
     return True
 
 
 def main():
-    # Criar e adicionar informações ao banco de dados
+    # Cria e adiciona as informações ao banco de dados
     session = session_factory()
     populate_db(session)
 
@@ -190,10 +198,11 @@ def main():
         print("Arquivo não encontrado.")
         return False
 
-    # Converter pdf -> png
+    # Conversão: pdf -> png
     temp_file = extract_pdf_as_image(pdf_file)
     aws_textract_response = get_ocr_response(temp_file)
 
+    # Cria o objeto Document
     document = trp.Document(aws_textract_response)
 
     # Extrai as informações e cria os objetos
@@ -203,6 +212,7 @@ def main():
     # Validação com o banco
     validate_certificate(session, doc_employee, doc_course,
                          signer_info, course_date_info)
+
     session.close()
 
 
