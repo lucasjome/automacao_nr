@@ -1,8 +1,11 @@
-# Leitura automatizada de Certificados NR
+# Leitura automatizada de certificados NR
 
 ## Instruções de uso
 ### Requerimentos
-Foi desenvolvido em ambiente Linux. É necessário que o pacote `poppler` esteja instalado para que a biblioteca [pdf2image](https://pdf2image.readthedocs.io/en/latest/installation.html) funcione. Ou usar o ambiente Conda apresentado neste repositório.
+- Conta ativa na AWS com permissão de uso do AWS Textract. Também é necessário que o [AWS CLI](https://aws.amazon.com/pt/cli/) esteja devidamente configurado com:
+`aws configure`.
+
+- Foi desenvolvido em ambiente Linux. É necessário que o pacote `poppler` esteja instalado para que a biblioteca [pdf2image](https://pdf2image.readthedocs.io/en/latest/installation.html) funcione. Ou usar o ambiente Conda apresentado neste repositório.
 ### Ambiente Conda
 Replicar o ambiente conda:
 `conda create --name automacao_env --file conda_pkgs.txt`
