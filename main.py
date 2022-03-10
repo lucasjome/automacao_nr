@@ -64,7 +64,7 @@ def get_ocr_response(documentName):
 
 
 def parse_document(document):
-    print("Analisando certificado NR")
+    print("Analisando o certificado NR")
 
     ocr_parser = OcrParser(page=document.pages[0])
 
